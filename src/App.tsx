@@ -5,6 +5,7 @@ import LandingPage from "./pages/LandingPage";
 import StudentPage from "./pages/StudentPage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; // 👈 add this line
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -24,6 +25,8 @@ const App: React.FC = () => {
         <Route path="/student" element={<StudentPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
       </Routes>
     </>
   );
