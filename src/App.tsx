@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import "./styles/main.css";
 import LandingPage from "./pages/LandingPage";
@@ -7,6 +7,16 @@ import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const App: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (typeof window.gtag === "function") {
+      window.gtag("config", "G-6PJ8695TH3", {
+        page_path: location.pathname + location.search,
+      });
+    }
+  }, [location]);
+
   return (
     <>
       <Routes>
