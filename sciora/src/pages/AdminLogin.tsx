@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import { Properties } from "csstype"; // ✅ import type
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -51,7 +52,8 @@ export default function AdminLogin() {
   );
 }
 
-const styles = {
+// ✅ Type-safe style object using `csstype`
+const styles: { [key: string]: Properties } = {
   wrapper: {
     display: "flex",
     flexDirection: "column",
@@ -66,7 +68,7 @@ const styles = {
     width: "100%",
     maxWidth: "400px",
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     gap: "1rem",
   },
   input: {
