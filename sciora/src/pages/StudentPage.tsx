@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../services/supabaseClient";
 import styled from "styled-components";
 import Header from "../components/Header"; // Adjust path if needed
+import FeedbackButton from '../components/FeedbackButton';
+import KnowledgeFeed from '../components/KnowledgeFeed';
 
 // Types
 type Course = { id: string; name: string };
@@ -1049,6 +1051,8 @@ const StudentPage: React.FC = () => {
           </MainContent>
         </CourseLayout>
       </ContentWrapper>
+      
+      <FeedbackButton />
     </PageContainer>
   );
 };

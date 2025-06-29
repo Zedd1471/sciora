@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy"; // 👈 add this line
 import ResourcesPage from "./pages/ResourcesPage"; // ✅ Add this line
 import AdminResourcesUpload from './pages/AdminResourcesUpload'; // 👈 Add this
+import KnowledgeHubPage from "./pages/knowledgehub"; // 👈 Add this at the top
 
 const App: React.FC = () => {
   const location = useLocation();
@@ -29,6 +30,7 @@ const App: React.FC = () => {
         <Route path="*" element={<NotFound />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/admin/resources-upload" element={<AdminResourcesUpload />} />
+<Route path="/knowledgehub" element={<KnowledgeHubPage />} /> // ✅ Add this line
 
 {/* ✅ Add this route */}
 <Route path="/resources" element={<ResourcesPage />} />

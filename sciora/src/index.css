@@ -1,5 +1,13 @@
-/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Custom Classes */
+.input {
+  @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+/* Base Styling */
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -7,6 +15,7 @@ body {
   color: #333;
 }
 
+/* Hero Section */
 .hero-section {
   min-height: 100vh;
   display: flex;
@@ -34,6 +43,7 @@ body {
   color: white;
 }
 
+/* Section Styling */
 .section {
   padding: 3rem 1.5rem;
   text-align: center;
@@ -54,6 +64,7 @@ body {
   color: #222;
 }
 
+/* Cards */
 .card-grid {
   display: flex;
   flex-wrap: wrap;
@@ -69,13 +80,16 @@ body {
   border-radius: 8px;
 }
 
+/* Responsive */
 @media (max-width: 600px) {
   .hero-content h1 {
     font-size: 2.8rem !important;
   }
+
   .hero-content p {
     font-size: 1.1rem !important;
   }
+
   .card {
     width: 100%;
   }

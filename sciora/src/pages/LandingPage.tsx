@@ -1,10 +1,23 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
 import FeedbackCarousel from '../components/FeedbackCarousel';
+import FeedbackButton from '../components/FeedbackButton';
+import KnowledgeFeed from '../components/KnowledgeFeed';
+import StyledKnowledgeHub from '../components/StyledKnowledgeHub';
 
 export default function LandingPage() {
   const handleEnterClassroom = () => {
     window.location.href = '/student';
+  };
+
+  const itemStyle = {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '1rem 1.5rem',
+    marginBottom: '1rem',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.3s ease',
   };
 
   return (
@@ -23,7 +36,7 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
             style={{
-              fontSize: '6rem',
+              fontSize: 'clamp(2rem, 8vw, 6rem)',
               marginBottom: '1rem',
               fontWeight: 'bold',
               background: 'linear-gradient(45deg, rgb(154, 184, 199), #4ECDC4)',
@@ -45,61 +58,78 @@ export default function LandingPage() {
             Live. Learn. Excel.
           </motion.p>
 
-          <motion.button
-            onClick={handleEnterClassroom}
-            whileHover={{ scale: 1.05, backgroundColor: '#4ECDC4' }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.1 }}
-            style={{
-              padding: '1rem 2.5rem',
-              fontSize: '1.2rem',
-              backgroundColor: '#FF6B6B',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
-              fontWeight: '600',
-            }}
-          >
-            Enter Classroom →
-          </motion.button>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <motion.button
+              onClick={handleEnterClassroom}
+              whileHover={{ scale: 1.05, backgroundColor: '#4ECDC4' }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.1 }}
+              style={{
+                padding: '1rem 2.5rem',
+                fontSize: '1.2rem',
+                backgroundColor: '#FF6B6B',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+                fontWeight: '600',
+              }}
+            >
+              Enter Classroom →
+            </motion.button>
+
+            <Link to="/knowledgehub">
+              <motion.button
+                whileHover={{ scale: 1.05, backgroundColor: '#4ECDC4' }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.1 }}
+                style={{
+                  padding: '1rem 2.5rem',
+                  fontSize: '1.2rem',
+                  backgroundColor: '#1A535C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(26, 83, 92, 0.3)',
+                  fontWeight: '600',
+                }}
+              >
+                Visit Knowledge Hub →
+              </motion.button>
+            </Link>
+          </div>
         </motion.div>
       </div>
 
       {/* Welcome Section */}
-      <section className="section welcome-section" style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Blob */}
-        <svg
-          viewBox="0 0 600 600"
-          style={{
-            position: 'absolute',
-            top: '-100px',
-            left: '-100px',
-            zIndex: 0,
-            opacity: 0.2,
-            width: '400px',
-            height: '400px',
-          }}
-        >
-          <path
-            fill="#4ECDC4"
-            d="M421.6,306.8Q427,363.5,385.5,399.9Q344,436.3,288.5,452.5Q233,468.8,187.3,432.6Q141.5,396.5,107.3,356.5Q73,316.5,89.1,266.8Q105.3,217,134.3,173.8Q163.3,130.5,210.6,104.6Q258,78.8,305.8,101.3Q353.5,123.8,392.5,161.5Q431.5,199.3,421.6,306.8Z"
-          />
-        </svg>
-
+      <section
+        className="section welcome-section"
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          padding: '4rem 2rem',
+          textAlign: 'center',
+        }}
+      >
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Welcome to Sciora</h2>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+            Welcome to Sciora
+          </h2>
           <p style={{ fontSize: '1.2rem', maxWidth: '800px', margin: '0 auto' }}>
-            Sciora is a modern digital classroom platform designed for students and lecturers in life sciences and biotechnology...
+            Sciora is your gateway to mastering life sciences and biotechnology. Whether you're
+            preparing for exams or supporting students in the lab, Sciora makes academic tools more
+            accessible and effective.
           </p>
         </div>
       </section>
 
-      {/* About Section */}
-
+      {/* About Sciora Section */}
       <section
         className="section about-section"
         style={{
@@ -109,9 +139,9 @@ export default function LandingPage() {
           justifyContent: 'center',
           gap: '4rem',
           overflow: 'hidden',
-          flexWrap: 'wrap', // Ensures responsiveness on smaller screens
+          flexWrap: 'wrap',
           background:
-            'linear-gradient(rgba(255, 255, 255, 0.9), rgba(177, 187, 201, 0.95)), url(https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)',
+            'linear-gradient(rgba(255, 255, 255, 0.9), rgba(177, 187, 201, 0.95)), url(https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2070&auto=format&fit=crop)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -121,16 +151,29 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          style={{ flex: '1 1 400px', maxWidth: '600px' }} // Flex properties for responsiveness
+          style={{ flex: '1 1 400px', maxWidth: '600px' }}
         >
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1a2a4d' }}>
+          <h2
+            style={{
+              fontSize: '2.5rem',
+              fontWeight: 'bold',
+              marginBottom: '1.5rem',
+              color: '#1a2a4d',
+            }}
+          >
             About Sciora
-
           </h2>
           <p style={{ fontSize: '1.2rem', lineHeight: 1.6, color: '#4a5568' }}>
-            Built for 21st-century learners — Sciora is responsive, fast, and focused on academic excellence. From weekly
-            quizzes to peer Q&A, the platform enhances engagement between students and lecturers, especially in molecular
-            biology and related fields.
+            Sciora is a modern digital classroom platform designed for students and lecturers in
+            life sciences and biotechnology. Our mission is to streamline learning through
+            interactive content, real-time assessments, and student-centered design. From
+            auto-scored weekly quizzes to peer-driven Q&A forums and downloadable lecture notes,
+            Sciora keeps learners engaged and progressing.
+            <br />
+            <br />
+            Every feature of Sciora is crafted to improve clarity and academic performance. Whether
+            you're reviewing key metabolic pathways, preparing your next lab report, or tracking
+            academic progress, Sciora is your partner in success.
           </p>
         </motion.div>
         <motion.div
@@ -138,9 +181,18 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          style={{ flex: '1 1 300px', maxWidth: '400px', display: 'flex', justifyContent: 'center' }}
+          style={{
+            flex: '1 1 300px',
+            maxWidth: '400px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
         >
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto' }}>
+          <svg
+            viewBox="0 0 200 200"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: '100%', height: 'auto' }}
+          >
             <defs>
               <linearGradient id="aboutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" style={{ stopColor: '#4ECDC4', stopOpacity: 1 }} />
@@ -154,57 +206,25 @@ export default function LandingPage() {
             />
           </svg>
         </motion.div>
-         <FeedbackCarousel />
+        <FeedbackCarousel />
       </section>
 
-      {/* Why Choose Section */}
+
+      {/* Why Choose Sciora Section */}
       <section
         style={{
-          position: 'relative',
           padding: '4rem 2rem',
           background: '#f2f7ff',
-          overflow: 'hidden',
         }}
       >
-        {/* SVG Wave Background */}
-        <svg
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 0,
-            opacity: 0.3,
-          }}
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill="#4ECDC4"
-            d="M0,64L48,101.3C96,139,192,213,288,224C384,235,480,181,576,165.3C672,149,768,171,864,186.7C960,203,1056,213,1152,202.7C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-          />
-        </svg>
-
-        {/* Text Content */}
         <div
           style={{
-            position: 'relative',
-            zIndex: 1,
             textAlign: 'center',
             maxWidth: '800px',
             margin: '0 auto',
           }}
         >
-          <h2
-            style={{
-              fontSize: '2.5rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem',
-              color: '#333',
-            }}
-          >
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#333' }}>
             Why Choose Sciora?
           </h2>
 
@@ -224,108 +244,53 @@ export default function LandingPage() {
               '📈 Track your academic progress',
               '🔐 Secure login with student ID',
             ].map((item, index) => (
-              <li
-                key={index}
-                style={{
-                  background: '#fff',
-                  borderRadius: '12px',
-                  padding: '1rem 1.5rem',
-                  marginBottom: '1rem',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                  transition: 'all 0.3s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
-                }}
-              >
-                
+              <li key={index} style={itemStyle}>
                 {item}
               </li>
             ))}
           </ul>
         </div>
-
       </section>
 
-      {/* Resources Section */}
+      {/* Knowledge Hub Preview */}
       <section
         style={{
-          position: 'relative',
           padding: '4rem 2rem',
+          backgroundColor: '#f7f7f7',
           textAlign: 'center',
-          backgroundImage:
-            'url(https://images.unsplash.com/photo-1631557777150-452c4568cc14?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          color: '#fff',
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(10, 108, 38, 0.25)',
-            zIndex: 0,
-          }}
-        />
+        <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#333' }}>
+          Knowledge Hub Preview
+        </h2>
+        <p style={{ fontSize: '1.1rem', marginBottom: '2rem', color: '#555' }}>
+          Recent resources and academic tips from students and lecturers.
+        </p>
 
-        <div style={{ position: 'relative', zIndex: 1,color:'white' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: 'bold', marginBottom: '1rem', color:'whitesmoke' }}>
-            Resources & Insights
-          </h2>
-          <p style={{ fontSize: '1.4rem', marginBottom: '2rem', color: 'whitesmoke' }}>
-            Explore educational articles, exam tips, and student research guides curated for you.
-          </p>
+        <KnowledgeFeed limit={3} />
 
-          <div
+        <Link to="/knowledgehub">
+          <button
             style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: '1rem',
+              marginTop: '2rem',
+              padding: '0.8rem 2rem',
+              fontSize: '1rem',
+              backgroundColor: '#1A535C',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '40px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
             }}
           >
-            <div
-              style={{
-                width: '300px',
-                border: '1px solid rgba(255,255,255,0.3)',
-                padding: '1rem',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(53, 99, 225, 0.46)',
-                color: '#fff',
-              }}
-            >
-              <h3 style={{ marginBottom: '0.5rem', color:'white' }}>5 Tips to Write Better Lab Reports</h3>
-              <p>Master structure, style, and clarity to impress your supervisors and boost scores.</p>
-            </div>
-            <div
-              style={{
-                width: '300px',
-                border: '1px solid rgba(226, 221, 221, 0.3)',
-                padding: '1rem',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(212, 26, 26, 0.32)',
-                color: '#fff',
-              }}
-            >
-              <h3 style={{ marginBottom: '0.5rem', color:'cyan' }}>Understanding Catabolite Repression</h3>
-              <p>A short, simple guide to this important metabolic regulation concept.</p>
-            </div>
-          </div>
-        </div>
+            Go to Knowledge Hub →
+          </button>
+        </Link>
       </section>
 
       {/* Footer */}
       <Footer />
+      <FeedbackButton />
     </>
   );
 }

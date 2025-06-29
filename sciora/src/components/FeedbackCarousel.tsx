@@ -1,51 +1,45 @@
-// src/components/FeedbackCarousel.tsx
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabaseClient'; // adjust path if needed
 
 interface Feedback {
-  quote: string;
+  message: string;
   name: string;
-  dept: string;
+  course: string;
 }
 
-const feedbacks: Feedback[] = [
-  {
-    quote: "Sciora helped me prepare better for weekly quizzes. It's now part of my routine.",
-    name: "Grace A.",
-    dept: "BTH 504"
-  },
-  {
-    quote: "The lecture notes are clear and easy to follow. I like how everything is organized.",
-    name: "Michael E.",
-    dept: "BTG 404"
-  },
-  {
-    quote: "I asked a question and got two helpful responses in less than an hour!",
-    name: "Zainab M.",
-    dept: "BTH 304"
-  },
-  {
-    quote: "The timer for quizzes is intense, but it helps me stay sharp. Love the challenge.",
-    name: "Tolu B.",
-    dept: "BTH 308"
-  }
-];
-
 const FeedbackCarousel = () => {
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [current, setCurrent] = useState(0);
-  const navigate = useNavigate();
+useEffect(() => {
+  const fetchFeedback = async () => {
+    const { data, error } = await supabase
+      .from('feedback')
+      .select('message, name, course, submitted_at')
+      .order('submitted_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Supabase error:', error);
+    } else {
+      setFeedbacks(data.filter(f => f.message)); // filter out empty messages
+    }
+  }; // ✅ this closing brace was probably missing
+
+  fetchFeedback();
+}, []);
 
   useEffect(() => {
+    if (feedbacks.length === 0) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % feedbacks.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [feedbacks]);
 
-  const handleFeedbackClick = () => {
-    navigate("/submit-feedback");
-  };
+  if (feedbacks.length === 0) return null;
+
+  const currentFeedback = feedbacks[current];
 
   return (
     <section className="bg-gradient-to-b from-white to-gray-50 py-20 mt-10 border-t border-gray-200">
@@ -67,22 +61,13 @@ const FeedbackCarousel = () => {
             transition={{ duration: 0.5 }}
           >
             <p className="text-xl italic text-gray-800 mb-6 leading-relaxed">
-              “{feedbacks[current].quote}”
+              “{currentFeedback.message}”
             </p>
             <p className="font-semibold text-indigo-700 text-lg">
-              — {feedbacks[current].name}, <span className="text-gray-500">{feedbacks[current].dept}</span>
+              — {currentFeedback.name || 'Anonymous'}, <span className="text-gray-500">{currentFeedback.course}</span>
             </p>
           </motion.div>
         </AnimatePresence>
-
-        <div className="mt-10">
-          <button
-            onClick={handleFeedbackClick}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-8 py-3 rounded-full shadow-md transition duration-300 active:scale-95 focus:outline-none focus:ring focus:ring-indigo-300"
-          >
-            Submit Your Feedback
-          </button>
-        </div>
       </div>
     </section>
   );
