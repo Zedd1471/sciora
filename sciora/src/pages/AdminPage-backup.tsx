@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../services/supabaseClient";
 import Papa from "papaparse";
 import styled, { keyframes } from "styled-components";
+import FeedbackManager from '../components/FeedbackManager';
 
 // Define types
 type Course = { id: string; name: string };
@@ -363,7 +364,7 @@ const AdminPage: React.FC = () => {
 
 // Admin Dashboard Component (all admin functionality)
 const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 'results'>('courses');
+const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 'results' | 'posts'>('courses');
   const [courses, setCourses] = useState<Course[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [courseId, setCourseId] = useState("");
@@ -717,8 +718,22 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         >
           Results
         </TabButton>
+              <TabButton 
+  $active={activeTab === 'posts'} 
+  onClick={() => setActiveTab('posts')}
+>
+  Posts
+</TabButton>
+<TabButton 
+  $active={activeTab === 'feedback'} 
+  onClick={() => setActiveTab('feedback')}
+>
+  Feedback
+</TabButton>
+
       </TabContainer>
-      
+
+
       {/* Courses Tab */}
       {activeTab === 'courses' && (
         <div>
@@ -1208,8 +1223,93 @@ const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           )}
         </div>
       )}
+      {activeTab === 'posts' && (
+  <Section>
+    <SectionTitle>Manage Knowledge Hub Posts</SectionTitle>
+    <PostManager />
+  </Section>
+)}
+{activeTab === 'feedback' && (
+  <Section>
+    <SectionTitle>Manage Student Feedback</SectionTitle>
+    <FeedbackManager />
+  </Section>
+)}
+
     </PageContainer>
   );
 };
+const PostManager: React.FC = () => {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('knowledge_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setPosts(data || []);
+    setLoading(false);
+  };
+
+  const deletePost = async (id: string) => {
+    if (!window.confirm("Delete this post?")) return;
+    setDeletingId(id);
+    await supabase.from('knowledge_posts').delete().eq('id', id);
+    setPosts(prev => prev.filter(p => p.id !== id));
+    setDeletingId(null);
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  if (loading) return <p>Loading posts...</p>;
+  if (posts.length === 0) return <p>No posts found.</p>;
+
+  return (
+    <div>
+      {posts.map(post => (
+        <div
+          key={post.id}
+          style={{
+            border: '1px solid #ddd',
+            padding: '1rem',
+            borderRadius: 6,
+            marginBottom: '1rem',
+            background: '#f9f9f9'
+          }}
+        >
+          <h4>{post.title}</h4>
+          <p style={{ color: '#333' }}>
+{post.body?.length > 150 ? post.body.slice(0, 150) + '...' : post.body || '[No content]'}
+          </p>
+          <small style={{ color: '#666' }}>
+            By {post.author_name} | {new Date(post.created_at).toLocaleString()}
+          </small>
+          <div style={{ marginTop: '0.5rem' }}>
+            <button
+              onClick={() => deletePost(post.id)}
+              disabled={deletingId === post.id}
+              style={{
+                background: '#ff4d4f',
+                color: 'white',
+                border: 'none',
+                padding: '0.4rem 0.9rem',
+                borderRadius: 4,
+                cursor: 'pointer'
+              }}
+            >
+              {deletingId === post.id ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
 export default AdminPage;

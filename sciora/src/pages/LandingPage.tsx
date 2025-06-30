@@ -4,7 +4,6 @@ import Footer from '../components/Footer';
 import FeedbackCarousel from '../components/FeedbackCarousel';
 import FeedbackButton from '../components/FeedbackButton';
 import KnowledgeFeed from '../components/KnowledgeFeed';
-import StyledKnowledgeHub from '../components/StyledKnowledgeHub';
 
 export default function LandingPage() {
   const handleEnterClassroom = () => {
@@ -166,9 +165,7 @@ export default function LandingPage() {
           <p style={{ fontSize: '1.2rem', lineHeight: 1.6, color: '#4a5568' }}>
             Sciora is a modern digital classroom platform designed for students and lecturers in
             life sciences and biotechnology. Our mission is to streamline learning through
-            interactive content, real-time assessments, and student-centered design. From
-            auto-scored weekly quizzes to peer-driven Q&A forums and downloadable lecture notes,
-            Sciora keeps learners engaged and progressing.
+            interactive content, real-time assessments, and student-centered design.
             <br />
             <br />
             Every feature of Sciora is crafted to improve clarity and academic performance. Whether
@@ -209,85 +206,110 @@ export default function LandingPage() {
         <FeedbackCarousel />
       </section>
 
+{/* Why Choose Sciora Section with Glassmorphism */}
+<section
+  style={{
+    padding: '4rem 2rem',
+    backgroundImage: 'url(https://images.unsplash.com/photo-1633613286848-e6f43bbafb8d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    position: 'relative',
+  }}
+>
+  <div
+    style={{
+      background: 'rgba(255, 255, 255, 0.15)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      borderRadius: '16px',
+      border: '1px solid rgba(255, 255, 255, 0.3)',
+      padding: '3rem 2rem',
+      maxWidth: '900px',
+      margin: '0 auto',
+      textAlign: 'center',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+    }}
+  >
+    <h2 style={{ fontSize: '3.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: 'smoke' }}>
+      Why Choose Sciora?
+    </h2>
 
-      {/* Why Choose Sciora Section */}
-      <section
+    <ul
+      style={{
+        listStyle: 'none',
+        padding: 0,
+        fontSize: '1.2rem',
+        lineHeight: '2',
+        color: '#f0f0f0',
+      }}
+    >
+      {[
+        '-🎓 Instant access to lecture materials',
+        '-📝 Weekly quizzes with auto-scoring',
+        '-🤝 Course-specific student Q&A',
+        '-📈 Track your academic progress',
+        '-🔐 Secure login with student ID',
+      ].map((item, index) => (
+        <li key={index} style={{ marginBottom: '1.5rem', color: 'gray' }}>
+          {item}
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+{/* Knowledge Hub Preview with Background and Glassmorphism */}
+<section
+  style={{
+    padding: '4rem 2rem',
+        background: `url('https://images.unsplash.com/photo-1642428668784-43cdfca2813e?q=80&w=1931&auto=format&fit=crop&ixlib=rb-4.1.0')no-repeat center center fixed`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    textAlign: 'center',
+    position: 'relative',
+  }}
+>
+  <div
+    style={{
+      background: 'rgba(255, 255, 255, 0.15)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      borderRadius: '16px',
+      border: '1px solid rgba(140, 25, 25, 0.55)',
+      padding: '3rem 2rem',
+      maxWidth: '900px',
+      margin: '0 auto',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+    }}
+  >
+    <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'whitesmoke' }}>
+      Knowledge Hub Preview
+    </h2>
+    <p style={{ fontSize: '1.1rem', marginBottom: '2rem', color: '#f0f0f0' }}>
+      Recent resources and academic tips from students and lecturers.
+    </p>
+
+    <KnowledgeFeed limit={4} />
+
+    <Link to="/knowledgehub">
+      <button
         style={{
-          padding: '4rem 2rem',
-          background: '#f2f7ff',
+          marginTop: '2rem',
+          padding: '0.8rem 2rem',
+          fontSize: '1rem',
+          backgroundColor: '#1A535C',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '40px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <div
-          style={{
-            textAlign: 'center',
-            maxWidth: '800px',
-            margin: '0 auto',
-          }}
-        >
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#333' }}>
-            Why Choose Sciora?
-          </h2>
-
-          <ul
-            style={{
-              listStyle: 'none',
-              padding: 0,
-              fontSize: '1.2rem',
-              lineHeight: '2',
-              color: '#444',
-            }}
-          >
-            {[
-              '🎓 Instant access to lecture materials',
-              '📝 Weekly quizzes with auto-scoring',
-              '🤝 Course-specific student Q&A',
-              '📈 Track your academic progress',
-              '🔐 Secure login with student ID',
-            ].map((item, index) => (
-              <li key={index} style={itemStyle}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Knowledge Hub Preview */}
-      <section
-        style={{
-          padding: '4rem 2rem',
-          backgroundColor: '#f7f7f7',
-          textAlign: 'center',
-        }}
-      >
-        <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#333' }}>
-          Knowledge Hub Preview
-        </h2>
-        <p style={{ fontSize: '1.1rem', marginBottom: '2rem', color: '#555' }}>
-          Recent resources and academic tips from students and lecturers.
-        </p>
-
-        <KnowledgeFeed limit={3} />
-
-        <Link to="/knowledgehub">
-          <button
-            style={{
-              marginTop: '2rem',
-              padding: '0.8rem 2rem',
-              fontSize: '1rem',
-              backgroundColor: '#1A535C',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '40px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            Go to Knowledge Hub →
-          </button>
-        </Link>
-      </section>
-
+        Go to Knowledge Hub →
+      </button>
+    </Link>
+  </div>
+</section>
       {/* Footer */}
       <Footer />
       <FeedbackButton />

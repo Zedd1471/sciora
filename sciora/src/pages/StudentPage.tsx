@@ -547,26 +547,69 @@ const QuizTaker: React.FC<{ quiz: Quiz; onBack: () => void }> = ({
   const timerSeconds = quiz.timer_seconds || 0;
   const [timeLeft, setTimeLeft] = useState(timerSeconds);
 
-  const handleStartQuiz = async () => {
-    setErrorMsg("");
-    if (!studentId.startsWith("BTH/")) {
-      setErrorMsg("Only students with ID starting with 'BTH/' can take this quiz.");
-      return;
-    }
-    setCheckingRetake(true);
-    const { data } = await supabase
-      .from("quiz_results")
-      .select("id")
-      .eq("quiz_id", quiz.id)
-      .eq("student_id", studentId)
-      .maybeSingle();
-    setCheckingRetake(false);
-    if (data) {
-      setErrorMsg("You have already taken this quiz. Retakes are not allowed.");
-      return;
-    }
-    setIdEntered(true);
+const handleStartQuiz = async () => {
+  setErrorMsg("");
+
+  // Prevent multiple tabs
+  const quizKey = `quiz_open_${quiz.id}`;
+  if (localStorage.getItem(quizKey)) {
+    setErrorMsg("This quiz is already open in another tab.");
+    return;
+  }
+  localStorage.setItem(quizKey, "true");
+
+  if (!studentId.startsWith("BTH/")) {
+    setErrorMsg("Only students with ID starting with 'BTH/' can take this quiz.");
+    localStorage.removeItem(quizKey); // clean up if blocked
+    return;
+  }
+
+  setCheckingRetake(true);
+  const { data } = await supabase
+    .from("quiz_results")
+    .select("id")
+    .eq("quiz_id", quiz.id)
+    .eq("student_id", studentId)
+    .maybeSingle();
+  setCheckingRetake(false);
+
+  if (data) {
+    setErrorMsg("You have already taken this quiz. Retakes are not allowed.");
+    localStorage.removeItem(quizKey); // clean up if blocked
+    return;
+  }
+
+  setIdEntered(true);
+};
+useEffect(() => {
+  if (!idEntered) return;
+
+  const quizKey = `quiz_open_${quiz.id}`;
+
+  const cleanup = () => {
+    localStorage.removeItem(quizKey);
   };
+
+  // Cleanup on unload or tab close
+  window.addEventListener("beforeunload", cleanup);
+
+  // Cleanup on manual quiz exit (e.g., Back button)
+  return () => {
+    cleanup();
+    window.removeEventListener("beforeunload", cleanup);
+  };
+}, [idEntered, quiz.id]);
+useEffect(() => {
+  const quizKey = `quiz_open_${quiz.id}`;
+  const onStorageChange = (e: StorageEvent) => {
+    if (e.key === quizKey && e.newValue === "true" && !idEntered) {
+      alert("This quiz is already open in another tab. Closing this tab...");
+      window.close(); // or redirect
+    }
+  };
+  window.addEventListener("storage", onStorageChange);
+  return () => window.removeEventListener("storage", onStorageChange);
+}, [idEntered, quiz.id]);
 
   useEffect(() => {
     if (!idEntered) return;
