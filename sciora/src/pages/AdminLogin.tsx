@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../services/supabaseClient";
 import { Properties } from "csstype"; // ✅ import type
 
 export default function AdminLogin() {
@@ -51,6 +51,7 @@ export default function AdminLogin() {
     </div>
   );
 }
+
 
 // ✅ Type-safe style object using `csstype`
 const styles: { [key: string]: Properties } = {

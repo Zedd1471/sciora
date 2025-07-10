@@ -41,8 +41,13 @@ const FeedbackManager = () => {
 
   const deleteFeedback = async (id: string) => {
     if (!window.confirm("Delete this feedback?")) return;
-    await supabase.from('feedback').delete().eq('id', id);
-    setFeedbacks(prev => prev.filter(f => f.id !== id));
+    const { error } = await supabase.from('feedback').delete().eq('id', id);
+    if (error) {
+      console.error("Error deleting feedback:", error);
+      alert(`Failed to delete feedback: ${error.message}`);
+    } else {
+      fetchFeedback();
+    }
   };
 
   useEffect(() => {

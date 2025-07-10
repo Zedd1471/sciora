@@ -1,150 +1,300 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
 import Footer from '../components/Footer';
 import FeedbackCarousel from '../components/FeedbackCarousel';
 import FeedbackButton from '../components/FeedbackButton';
-import KnowledgeFeed from '../components/KnowledgeFeed';
+import BlogCarousel from '../components/BlogCarousel';
+
+
+// Keyframes for animations
+const gradientAnimation = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
+
+// Styled Components
+const PageWrapper = styled.div`
+  background-color: ${({ theme }) => theme.colors.background};
+`;
+
+const HeroSection = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-image: url('https://images.unsplash.com/photo-1648792940059-3b782a7b8b20?q=80&w=1932&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  text-align: center;
+`;
+
+const HeroOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background-color: rgba(8, 8, 8, 0.6);
+  z-index: 1;
+`;
+
+const HeroContent = styled(motion.div)`
+  position: relative;
+  z-index: 2;
+  padding: 0 1.5rem 5rem;
+  max-width: 800px;
+  color: white;
+`;
+
+const MainHeading = styled(motion.h1)`
+  font-size: ${({ theme }) => theme.fontSizes.xlarge};
+  margin-bottom: ${({ theme }) => theme.spacing.medium};
+  font-weight: bold;
+  background: linear-gradient(45deg, ${({ theme }) => theme.colors.primary}, #a6c1ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: ${gradientAnimation} 5s ease infinite;
+`;
+
+const Subheading = styled(motion.p)`
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  margin-bottom: ${({ theme }) => theme.spacing.large};
+  color: #E0E0E0;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.medium};
+  justify-content: center;
+  flex-wrap: wrap;
+`;
+
+const StyledButton = styled(motion.button)`
+  padding: 1rem 2.5rem;
+  font-size: ${({ theme }) => theme.fontSizes.medium};
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &.primary {
+    background-color: ${({ theme }) => theme.colors.secondary};
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  }
+
+  &.secondary {
+    background-color: #1A535C;
+    box-shadow: 0 4px 15px rgba(26, 83, 92, 0.3);
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const Section = styled.section`
+  padding: 4rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+`;
+
+const WelcomeSection = styled(Section)`
+  background-image: url('https://images.unsplash.com/photo-1621529355377-b1685d2a7d77?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  color: black; /* Set font color to black */
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(245, 237, 237, 0.64); /* More transparent white overlay */
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+`;
+
+const AboutSection = styled(Section)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+  flex-wrap: wrap;
+  background-image: url('https://images.unsplash.com/photo-1622295023825-6e319464b810?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); /* New background image */
+  background-size: cover;
+  background-position: center;
+  position: relative; /* Needed for overlay */
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to right, rgba(215, 208, 208, 0.54), rgba(146, 175, 233, 0.8)); /* Overlay for readability */
+    z-index: 0;
+  }
+
+  > * {
+    position: relative; /* Ensure content is above overlay */
+    z-index: 1;
+  }
+`;
+
+const GlassSection = styled(Section)`
+  background-image: url(https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=928&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D);
+  background-size: cover;
+  background-position: center;
+`;
+
+const GlassContainer = styled.div`
+  background: ${({ theme }) => theme.colors.glassBg};
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: ${({ theme }) => theme.borderRadius};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  padding: 3rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  box-shadow: ${({ theme }) => theme.boxShadow};
+  color: whitesmoke;
+`;
+
+const SectionTitle = styled.h2`
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  font-weight: bold;
+  margin-bottom: ${({ theme }) => theme.spacing.medium};
+  color: ${({ theme, color }) => color || theme.colors.text};
+`;
+
+const SectionText = styled.p`
+  font-size: ${({ theme }) => theme.fontSizes.medium};
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+  color: ${({ theme, color }) => color || theme.colors.textLight};
+`;
+
+const BlogPreviewSection = styled(Section)`
+  background-image: url('https://images.unsplash.com/photo-1546074177-ffdda98d214f?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  background-size: cover;
+  background-position: center;
+  color: #fff; /* Ensure text is readable on the new background */
+`;
+
+const BlogGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  padding: 2rem 0;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const ViewAllButton = styled(Link)`
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.8rem 2rem;
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: white;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+`;
 
 export default function LandingPage() {
   const handleEnterClassroom = () => {
     window.location.href = '/student';
   };
 
-  const itemStyle = {
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '1rem 1.5rem',
-    marginBottom: '1rem',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-    transition: 'all 0.3s ease',
-  };
-
   return (
-    <>
-      {/* Hero Section */}
-      <div className="hero-section">
-        <div className="hero-overlay" />
-        <motion.div
-          className="hero-content"
+    <PageWrapper>
+      <HeroSection>
+        <HeroOverlay />
+        <HeroContent
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h1
+          <MainHeading
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            style={{
-              fontSize: 'clamp(2rem, 8vw, 6rem)',
-              marginBottom: '1rem',
-              fontWeight: 'bold',
-              background: 'linear-gradient(45deg, rgb(154, 184, 199), #4ECDC4)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textFillColor: 'transparent',
-            }}
           >
             Sciora
-          </motion.h1>
+          </MainHeading>
 
-          <motion.p
+          <Subheading
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            style={{ fontSize: '2rem', marginBottom: '2rem', color: '#E0E0E0' }}
           >
             Live. Learn. Excel.
-          </motion.p>
+          </Subheading>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <motion.button
+          <ButtonGroup>
+            <StyledButton
+              className="primary"
               onClick={handleEnterClassroom}
-              whileHover={{ scale: 1.05, backgroundColor: '#4ECDC4' }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.1 }}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.2rem',
-                backgroundColor: '#FF6B6B',
-                color: 'white',
-                border: 'none',
-                borderRadius: '50px',
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
-                fontWeight: '600',
-              }}
             >
               Enter Classroom →
-            </motion.button>
+            </StyledButton>
 
-            <Link to="/knowledgehub">
-              <motion.button
-                whileHover={{ scale: 1.05, backgroundColor: '#4ECDC4' }}
+            <Link to="/blog">
+              <StyledButton
+                className="secondary"
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.1 }}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.2rem',
-                  backgroundColor: '#1A535C',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50px',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 15px rgba(26, 83, 92, 0.3)',
-                  fontWeight: '600',
-                }}
               >
-                Visit Knowledge Hub →
-              </motion.button>
+                Visit Sciora Blog →
+              </StyledButton>
             </Link>
-          </div>
-        </motion.div>
-      </div>
+          </ButtonGroup>
+        </HeroContent>
+      </HeroSection>
 
-      {/* Welcome Section */}
-      <section
-        className="section welcome-section"
-        style={{
-          position: 'relative',
-          overflow: 'hidden',
-          padding: '4rem 2rem',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            Welcome to Sciora
-          </h2>
-          <p style={{ fontSize: '1.2rem', maxWidth: '800px', margin: '0 auto' }}>
-            Sciora is your gateway to mastering life sciences and biotechnology. Whether you're
-            preparing for exams or supporting students in the lab, Sciora makes academic tools more
-            accessible and effective.
-          </p>
-        </div>
-      </section>
+      <WelcomeSection>
+        <SectionTitle>Welcome to Sciora</SectionTitle>
+        <SectionText color="black">
+          Sciora is your gateway to mastering life sciences and biotechnology. Whether you're
+          preparing for exams or supporting students in the lab, Sciora makes academic tools more
+          accessible and effective.
+        </SectionText>
+      </WelcomeSection>
 
-      {/* About Sciora Section */}
-      <section
-        className="section about-section"
-        style={{
-          padding: '5rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '4rem',
-          overflow: 'hidden',
-          flexWrap: 'wrap',
-          background:
-            'linear-gradient(rgba(255, 255, 255, 0.9), rgba(177, 187, 201, 0.95)), url(https://images.unsplash.com/photo-1554147090-e1221a04a025?q=80&w=2070&auto=format&fit=crop)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <AboutSection>
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -152,167 +302,48 @@ export default function LandingPage() {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           style={{ flex: '1 1 400px', maxWidth: '600px' }}
         >
-          <h2
-            style={{
-              fontSize: '2.5rem',
-              fontWeight: 'bold',
-              marginBottom: '1.5rem',
-              color: '#1a2a4d',
-            }}
-          >
-            About Sciora
-          </h2>
-          <p style={{ fontSize: '1.2rem', lineHeight: 1.6, color: '#4a5568' }}>
+          <SectionTitle color="#1a2a4d">About Sciora</SectionTitle>
+          <SectionText color="black">
             Sciora is a modern digital classroom platform designed for students and lecturers in
             life sciences and biotechnology. Our mission is to streamline learning through
             interactive content, real-time assessments, and student-centered design.
             <br />
             <br />
-            Every feature of Sciora is crafted to improve clarity and academic performance. Whether
-            you're reviewing key metabolic pathways, preparing your next lab report, or tracking
-            academic progress, Sciora is your partner in success.
-          </p>
+            Every feature of Sciora is crafted to improve clarity and academic performance.
+          </SectionText>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-          style={{
-            flex: '1 1 300px',
-            maxWidth: '400px',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <svg
-            viewBox="0 0 200 200"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ width: '100%', height: 'auto' }}
-          >
-            <defs>
-              <linearGradient id="aboutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#4ECDC4', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#556270', stopOpacity: 0.8 }} />
-              </linearGradient>
-            </defs>
-            <path
-              fill="url(#aboutGradient)"
-              d="M48.9,-59.3C62.8,-49.4,73.1,-33.6,75.9,-16.7C78.7,0.2,74,18.2,64.8,32.5C55.6,46.8,41.9,57.4,26.8,64.8C11.7,72.2,-4.8,76.4,-21.1,72.7C-37.4,69,-53.4,57.4,-64.2,42.2C-75,27,-80.6,8.2,-78.2,-9.2C-75.8,-26.6,-65.4,-42.6,-51.8,-52.7C-38.2,-62.8,-21.4,-67,-4.3,-65.1C12.8,-63.2,25.7,-69.1,38.9,-65.3C52.1,-61.5,55,-47.5,48.9,-59.3Z"
-              transform="translate(100 100) scale(1.1)"
-            />
-          </svg>
-        </motion.div>
-        <FeedbackCarousel />
-      </section>
+        
+      <FeedbackCarousel />
+      </AboutSection>
 
-{/* Why Choose Sciora Section with Glassmorphism */}
-<section
-  style={{
-    padding: '4rem 2rem',
-    backgroundImage: 'url(https://images.unsplash.com/photo-1633613286848-e6f43bbafb8d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    position: 'relative',
-  }}
->
-  <div
-    style={{
-      background: 'rgba(255, 255, 255, 0.15)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
-      borderRadius: '16px',
-      border: '1px solid rgba(255, 255, 255, 0.3)',
-      padding: '3rem 2rem',
-      maxWidth: '900px',
-      margin: '0 auto',
-      textAlign: 'center',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
-    }}
-  >
-    <h2 style={{ fontSize: '3.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: 'smoke' }}>
-      Why Choose Sciora?
-    </h2>
+      <GlassSection>
+        <GlassContainer>
+          <SectionTitle color="whitesmoke">Why Choose Sciora?</SectionTitle>
+          <ul style={{ listStyle: 'none', padding: 0, fontSize: '1.2rem', lineHeight: '2', color: 'whitesmoke' }}>
+            {[
+              '🎓 Comprehensive Learning Resources: Access a vast library of lecture notes, study guides, and supplementary materials, all meticulously organized by course and week.',
+              '📝 Interactive Quizzes & Assessments: Test your knowledge with engaging quizzes featuring instant feedback, detailed explanations, and performance tracking to pinpoint areas for improvement.',
+              '🤝 Collaborative Q&A Forums: Connect with peers and instructors in dedicated course-specific forums to ask questions, share insights, and deepen your understanding of complex topics.',
+              '📈 Personalized Progress Tracking: Monitor your academic journey with intuitive dashboards that visualize your quiz scores, study habits, and overall mastery of course content.',
+              '💡 Innovative Learning Tools: Benefit from cutting-edge features like interactive 3D models, video lectures, and real-world case studies that bring life sciences and biotechnology to life.',
+              '🔒 Secure & Accessible Platform: Enjoy a secure and user-friendly environment, accessible from any device, ensuring your learning experience is seamless and protected.',
+            ].map((item, index) => (
+              <li key={index} style={{ marginBottom: '1.5rem' }} dangerouslySetInnerHTML={{ __html: item }} />
+            ))}
+          </ul>
+        </GlassContainer>
+      </GlassSection>
 
-    <ul
-      style={{
-        listStyle: 'none',
-        padding: 0,
-        fontSize: '1.2rem',
-        lineHeight: '2',
-        color: '#f0f0f0',
-      }}
-    >
-      {[
-        '-🎓 Instant access to lecture materials',
-        '-📝 Weekly quizzes with auto-scoring',
-        '-🤝 Course-specific student Q&A',
-        '-📈 Track your academic progress',
-        '-🔐 Secure login with student ID',
-      ].map((item, index) => (
-        <li key={index} style={{ marginBottom: '1.5rem', color: 'gray' }}>
-          {item}
-        </li>
-      ))}
-    </ul>
-  </div>
-</section>
+      <BlogPreviewSection>
+        <SectionTitle>Latest from Our Blog</SectionTitle>
+        <SectionText>Stay updated with our latest articles, tips, and insights.</SectionText>
+        <BlogCarousel />
+        <ViewAllButton to="/blog">View All Posts →</ViewAllButton>
+      </BlogPreviewSection>
 
-{/* Knowledge Hub Preview with Background and Glassmorphism */}
-<section
-  style={{
-    padding: '4rem 2rem',
-        background: `url('https://images.unsplash.com/photo-1642428668784-43cdfca2813e?q=80&w=1931&auto=format&fit=crop&ixlib=rb-4.1.0')no-repeat center center fixed`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    textAlign: 'center',
-    position: 'relative',
-  }}
->
-  <div
-    style={{
-      background: 'rgba(255, 255, 255, 0.15)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
-      borderRadius: '16px',
-      border: '1px solid rgba(140, 25, 25, 0.55)',
-      padding: '3rem 2rem',
-      maxWidth: '900px',
-      margin: '0 auto',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
-    }}
-  >
-    <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'whitesmoke' }}>
-      Knowledge Hub Preview
-    </h2>
-    <p style={{ fontSize: '1.1rem', marginBottom: '2rem', color: '#f0f0f0' }}>
-      Recent resources and academic tips from students and lecturers.
-    </p>
-
-    <KnowledgeFeed limit={4} />
-
-    <Link to="/knowledgehub">
-      <button
-        style={{
-          marginTop: '2rem',
-          padding: '0.8rem 2rem',
-          fontSize: '1rem',
-          backgroundColor: '#1A535C',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '40px',
-          cursor: 'pointer',
-          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-        }}
-      >
-        Go to Knowledge Hub →
-      </button>
-    </Link>
-  </div>
-</section>
-      {/* Footer */}
       <Footer />
       <FeedbackButton />
-    </>
+    </PageWrapper>
   );
 }
+''

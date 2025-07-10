@@ -1,19 +1,30 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../services/supabaseClient";
 
 export default function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data?.user);
-      setLoading(false);
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    };
+
+    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
     });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (isLoggedIn === undefined) {
+    return <div>Loading...</div>; // Or a spinner
+  }
 
-  return user ? children : <Navigate to="/admin-login" />;
+  return isLoggedIn ? children : <Navigate to="/admin-login" />;
 }

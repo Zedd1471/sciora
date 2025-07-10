@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../services/supabaseClient";
 import styled from "styled-components";
 import Header from "../components/Header"; // Adjust path if needed
@@ -111,21 +112,80 @@ const CourseButton = styled.button<{ $active: boolean }>`
   }
 `;
 
-const StudentPanelContainer = styled.div`
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-  box-shadow: 0 4px 24px rgba(44, 62, 80, 0.1);
-  padding: 2rem;
-  width: 100%;
-  max-width: 600px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  
-  @media (max-width: 768px) {
-    padding: 1.5rem;
+const TabButton = styled.button<{ $active: boolean }>`
+  background: ${({ $active }) => $active ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
+  color: ${({ $active }) => $active ? '#fff' : '#eee'};
+  border: none;
+  border-bottom: 2px solid ${({ $active }) => $active ? '#fff' : 'transparent'};
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
+
+const NotesPanel: React.FC<{ notes: Note[] }> = ({ notes }) => (
+  <div>
+    <SectionHeader>
+      <SectionDivider />
+      <SectionTitle>Lecture Notes</SectionTitle>
+    </SectionHeader>
+    {notes.length === 0 ? (
+      <EmptyState>
+        <EmptyStateIcon>📄</EmptyStateIcon>
+        <p>No notes available for this course yet.</p>
+      </EmptyState>
+    ) : (
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
+        {notes.map((note) => (
+          <NoteLink
+            key={note.id}
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              addWatermarkAndDownload(note.file_url, `${note.title}.pdf`);
+            }}
+          >
+            <NoteIcon>📄</NoteIcon> {note.title}
+            {note.week ? <Badge>Week {note.week}</Badge> : ""}
+          </NoteLink>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => void; }> = ({ quizzes, onQuizClick }) => (
+  <div>
+    <SectionHeader>
+      <SectionDivider />
+      <SectionTitle>Quizzes</SectionTitle>
+    </SectionHeader>
+    {quizzes.length === 0 ? (
+      <EmptyState>
+        <EmptyStateIcon>📝</EmptyStateIcon>
+        <p>No quizzes available for this course yet.</p>
+      </EmptyState>
+    ) : (
+      <div>
+        {quizzes.map((quiz) => (
+          <QuizButton key={quiz.id} onClick={() => onQuizClick(quiz)}>
+            <div style={{ fontSize: "1.05rem", marginBottom: 4 }}>
+              📝 {quiz.title} <Badge>Week {quiz.week}</Badge>
+            </div>
+            <div style={{ fontSize: "0.95rem", fontWeight: "normal", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              <span>📘 {quiz.num_questions || 5} Questions</span>
+              <span>⏱️ {quiz.timer_seconds ? `${Math.floor(quiz.timer_seconds / 60)} min` : "No time limit"}</span>
+            </div>
+          </QuizButton>
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 const SectionHeader = styled.div`
   display: flex;
@@ -465,66 +525,38 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 // StudentPanel component
-const StudentPanel: React.FC<{
+import { addWatermarkAndDownload } from "../utils/pdfUtils";
+
+// ... (rest of the component)
+
+const StudentPanel: React.FC<{ 
   notes: Note[];
   quizzes: Quiz[];
   onQuizClick: (quiz: Quiz) => void;
 }> = ({ notes, quizzes, onQuizClick }) => {
+  const handleNoteDownload = (note: Note) => {
+    addWatermarkAndDownload(note.file_url, `${note.title}.pdf`);
+  };
+
   return (
     <StudentPanelContainer>
-      <div style={{ marginBottom: 32 }}>
-        <SectionHeader>
-          <SectionDivider />
-          <SectionTitle>Lecture Notes</SectionTitle>
-        </SectionHeader>
-        {notes.length === 0 ? (
-          <div style={{ padding: "2rem", textAlign: "center", color: "#888", background: "rgba(255, 255, 255, 0.5)", borderRadius: "8px" }}>
-            <EmptyStateIcon>📄</EmptyStateIcon>
-            <p>No notes available for this course yet.</p>
-          </div>
-        ) : (
+      {/* ... (rest of the component) */}
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {notes.map((note) => (
               <NoteLink
                 key={note.id}
-                href={note.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNoteDownload(note);
+                }}
               >
                 <NoteIcon>📄</NoteIcon> {note.title} 
                 {note.week ? <Badge>Week {note.week}</Badge> : ""}
               </NoteLink>
             ))}
           </div>
-        )}
-      </div>
-
-      <div>
-        <SectionHeader>
-          <SectionDivider />
-          <SectionTitle>Quizzes</SectionTitle>
-        </SectionHeader>
-        {quizzes.length === 0 ? (
-          <div style={{ padding: "2rem", textAlign: "center", color: "#888", background: "rgba(255, 255, 255, 0.5)", borderRadius: "8px" }}>
-            <EmptyStateIcon>📝</EmptyStateIcon>
-            <p>No quizzes available for this course yet.</p>
-          </div>
-        ) : (
-          <div>
-            {quizzes.map((quiz) => (
-              <QuizButton key={quiz.id} onClick={() => onQuizClick(quiz)}>
-                <div style={{ fontSize: "1.05rem", marginBottom: 4 }}>
-                  📝 {quiz.title} <Badge>Week {quiz.week}</Badge>
-                </div>
-                <div style={{ fontSize: "0.95rem", fontWeight: "normal", display: "flex", flexWrap: "wrap", gap: "12px" }}>
-                  <span>📘 {quiz.num_questions || 5} Questions</span>
-                  <span>⏱️ {quiz.timer_seconds ? `${Math.floor(quiz.timer_seconds / 60)} min` : "No time limit"}</span>
-                </div>
-              </QuizButton>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* ... (rest of the component) */}
     </StudentPanelContainer>
   );
 };
@@ -841,61 +873,71 @@ useEffect(() => {
       </QuizProgress>
       <ProgressBar $progress={(current + 1) / questions.length * 100} />
       
-      <p style={{ fontWeight: "bold", fontSize: "1.1rem", marginBottom: "1.5rem", color: "#2d3e50" }}>
-        {q.question_text}
-      </p>
-      <ul style={{ paddingLeft: 0, margin: "0 0 1.5rem 0", listStyle: "none" }}>
-        {q.options.map((opt, idx) => (
-          <li
-            key={idx}
-            onClick={() => handleAnswer(idx)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              background: answers[current] === idx 
-                ? 'rgba(230, 240, 255, 0.7)' 
-                : 'rgba(255, 255, 255, 0.6)',
-              border: answers[current] === idx 
-                ? "2px solid rgba(79, 140, 255, 0.8)" 
-                : "1px solid rgba(219, 234, 254, 0.5)",
-              borderRadius: 8,
-              padding: "1rem 1.25rem",
-              marginBottom: 12,
-              cursor: "pointer",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-              transition: "all 0.2s ease",
-              fontWeight: answers[current] === idx ? "bold" : "normal",
-              fontSize: "1rem",
-              userSelect: "none",
-              boxShadow: answers[current] === idx ? "0 2px 8px rgba(79, 140, 255, 0.2)" : "none",
-              transform: answers[current] === idx ? "translateY(-2px)" : "none",
-            }}
-            tabIndex={0}
-            onKeyDown={e => {
-              if (e.key === "Enter" || e.key === " ") handleAnswer(idx);
-            }}
-            aria-checked={answers[current] === idx}
-            role="radio"
-          >
-            <input
-              type="radio"
-              name={`q${current}`}
-              checked={answers[current] === idx}
-              onChange={() => handleAnswer(idx)}
-              style={{
-                marginRight: 16,
-                accentColor: "#4f8cff",
-                width: 18,
-                height: 18,
-                cursor: "pointer",
-              }}
-              tabIndex={-1}
-            />
-            <span>{opt}</span>
-          </li>
-        ))}
-      </ul>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.3 }}
+        >
+          <p style={{ fontWeight: "bold", fontSize: "1.1rem", marginBottom: "1.5rem", color: "#2d3e50" }}>
+            {q.question_text}
+          </p>
+          <ul style={{ paddingLeft: 0, margin: "0 0 1.5rem 0", listStyle: "none" }}>
+            {q.options.map((opt, idx) => (
+              <li
+                key={idx}
+                onClick={() => handleAnswer(idx)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  background: answers[current] === idx 
+                    ? 'rgba(230, 240, 255, 0.7)' 
+                    : 'rgba(255, 255, 255, 0.6)',
+                  border: answers[current] === idx 
+                    ? "2px solid rgba(79, 140, 255, 0.8)" 
+                    : "1px solid rgba(219, 234, 254, 0.5)",
+                  borderRadius: 8,
+                  padding: "1rem 1.25rem",
+                  marginBottom: 12,
+                  cursor: "pointer",
+                  backdropFilter: "blur(4px)",
+                  WebkitBackdropFilter: "blur(4px)",
+                  transition: "all 0.2s ease",
+                  fontWeight: answers[current] === idx ? "bold" : "normal",
+                  fontSize: "1rem",
+                  userSelect: "none",
+                  boxShadow: answers[current] === idx ? "0 2px 8px rgba(79, 140, 255, 0.2)" : "none",
+                  transform: answers[current] === idx ? "translateY(-2px)" : "none",
+                }}
+                tabIndex={0}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") handleAnswer(idx);
+                }}
+                aria-checked={answers[current] === idx}
+                role="radio"
+              >
+                <input
+                  type="radio"
+                  name={`q${current}`}
+                  checked={answers[current] === idx}
+                  onChange={() => handleAnswer(idx)}
+                  style={{
+                    marginRight: 16,
+                    accentColor: "#4f8cff",
+                    width: 18,
+                    height: 18,
+                    cursor: "pointer",
+                  }}
+                  tabIndex={-1}
+                />
+                <span>{opt}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      </AnimatePresence>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
         <button
           onClick={handlePrev}
@@ -956,6 +998,7 @@ const StudentPage: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [activeTab, setActiveTab] = useState<'notes' | 'quizzes'>('notes');
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -1070,11 +1113,18 @@ const StudentPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <StudentPanel
-                    notes={notes}
-                    quizzes={quizzes}
-                    onQuizClick={quiz => setSelectedQuiz(quiz)}
-                  />
+                  <div style={{ display: 'flex', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                    <TabButton $active={activeTab === 'notes'} onClick={() => setActiveTab('notes')}>Lecture Notes</TabButton>
+                    <TabButton $active={activeTab === 'quizzes'} onClick={() => setActiveTab('quizzes')}>Quizzes</TabButton>
+                  </div>
+
+                  {activeTab === 'notes' && (
+                    <NotesPanel notes={notes} />
+                  )}
+
+                  {activeTab === 'quizzes' && (
+                    <QuizzesPanel quizzes={quizzes} onQuizClick={quiz => setSelectedQuiz(quiz)} />
+                  )}
                   {selectedQuiz && (
                     <ModalOverlay>
                       <ModalContent>

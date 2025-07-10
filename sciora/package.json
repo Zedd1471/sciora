@@ -10,14 +10,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "-": "^0.0.1",
+    "@google/gemini-cli": "^0.1.9",
     "@react-three/drei": "^10.3.0",
     "@react-three/fiber": "^9.1.2",
     "@supabase/supabase-js": "^2.50.2",
     "framer-motion": "^12.19.2",
+    "g": "^2.0.1",
     "papaparse": "^5.5.3",
+    "pdf-lib": "^1.17.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.3",
+    "rehype-raw": "^7.0.0",
     "styled-components": "^6.1.19",
     "uuid": "^11.1.0"
   },
