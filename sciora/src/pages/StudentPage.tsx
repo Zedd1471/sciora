@@ -28,7 +28,6 @@ const PageContainer = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
   width: 95%;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.2);
@@ -267,9 +266,10 @@ const QuizButton = styled.button`
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
-  left: 0;  width: 50vw;
-  height: 56vh;
-  background: rgba(89, 117, 173, 0.7);
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,43 +279,31 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div<{
   $isQuizActive?: boolean;
-  $isStudentIdEntry?: boolean; // Added this prop
 }>`
-  background: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'transparent' : 'rgba(255, 255, 255, 0.1)'};
-  backdrop-filter: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'none' : 'blur(30px)'};
-  -webkit-backdrop-filter: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'none' : 'blur(30px)'};
-  border-radius: 16px; // Keep border-radius for the inner content if it needs it, or remove if inner content has its own
-  padding: ${({ $isQuizActive, $isStudentIdEntry }) => 
-    $isStudentIdEntry ? '0' : 
-    $isQuizActive ? '2rem 2.5rem' : '1.5rem 2rem'}; // Set padding to 0 for student ID entry
-  box-shadow: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'none' : '0 8px 32px 0 rgba(31, 38, 135, 0.2)'};
-  border: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'none' : '1px solid rgba(255, 255, 255, 0.18)'};
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   position: relative;
-  width: ${({ $isQuizActive, $isStudentIdEntry }) => 
-    $isStudentIdEntry ? 'clamp(320px, 90vw, 450px)' : // Adjusted width slightly for student ID entry, can be 'auto' if needed
-    $isQuizActive ? 'clamp(320px, 90vw, 800px)' : 'clamp(300px, 80vw, 600px)'};
+  width: clamp(320px, 90vw, 800px);
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  // Ensure content within is centered if ModalContent itself becomes a transparent container
-  align-items: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'center' : 'initial'};
-  justify-content: ${({ $isStudentIdEntry }) => $isStudentIdEntry ? 'center' : 'initial'};
+  align-items: center;
+  justify-content: center;
 
   @media (max-width: 768px) {
-    width: ${({ $isQuizActive, $isStudentIdEntry }) => 
-      $isStudentIdEntry ? '90vw' : 
-      $isQuizActive ? '95vw' : '90vw'};
-    padding: ${({ $isQuizActive, $isStudentIdEntry }) => 
-      $isStudentIdEntry ? '0' : 
-      $isQuizActive ? '1.5rem 2rem' : '1rem 1.5rem'};
+    width: 95vw;
+    padding: 1.5rem 2rem;
     max-height: 85vh;
   }
 
   @media (max-width: 480px) {
-    padding: ${({ $isQuizActive, $isStudentIdEntry }) => 
-      $isStudentIdEntry ? '0' : 
-      $isQuizActive ? '1rem 1.5rem' : '1rem'};
+    padding: 1rem 1.5rem;
   }
 `;
 
@@ -590,8 +578,11 @@ const handleStartQuiz = async () => {
   }
   localStorage.setItem(quizKey, "true");
 
-  if (!studentId.startsWith("BTH/")) {
-    setErrorMsg("Only students with ID starting with 'BTH/' can take this quiz.");
+  const normalizedId = studentId.toUpperCase().trim();
+  const idPattern = /^BTH\/\d{2}[A-Z]\/\d{4}$/;
+
+  if (!idPattern.test(normalizedId)) {
+    setErrorMsg("Invalid ID format. Please use BTH/XXY/XXXX format (e.g., BTH/18U/1234).");
     localStorage.removeItem(quizKey); // clean up if blocked
     return;
   }
@@ -601,7 +592,7 @@ const handleStartQuiz = async () => {
     .from("quiz_results")
     .select("id")
     .eq("quiz_id", quiz.id)
-    .eq("student_id", studentId)
+    .eq("student_id", normalizedId)
     .maybeSingle();
   setCheckingRetake(false);
 
@@ -697,10 +688,11 @@ useEffect(() => {
     const saveResult = async () => {
       if (showResult && studentId && questions.length > 0) {
         setSaving(true);
+        const normalizedId = studentId.toUpperCase().trim();
         await supabase.from("quiz_results").insert([
           {
             quiz_id: quiz.id,
-            student_id: studentId,
+            student_id: normalizedId,
             score,
             total: questions.length,
             taken_at: new Date().toISOString(),
@@ -715,15 +707,15 @@ useEffect(() => {
 
   if (!idEntered) {
     return (
-      <div style={{ maxWidth: "500px", margin: "0 auto" }}>
-        <h4 style={{ marginBottom: "1rem", color: "#2d3e50" }}>
+      <div style={{ width: "100%", margin: "0 auto" }}>
+        <h4 style={{ marginBottom: "1rem", color: "whitesmoke" }}>
           Enter your Matric Number / Student ID to start the quiz
         </h4>
         <input
           type="text"
           value={studentId}
           onChange={(e) => setStudentId(e.target.value)}
-          placeholder="e.g. BTH/123456"
+          placeholder="Please use BTH/XXY/XXXX format (e.g., BTH/18U/1234)"
           style={{
             padding: "0.75rem",
             width: "100%",
@@ -798,7 +790,7 @@ useEffect(() => {
 
   if (showResult)
     return (
-      <div style={{ maxWidth: "500px", margin: "0 auto" }}>
+      <div style={{ width: "100%", margin: "0 auto" }}>
         <ResultCard>
           <h4 style={{ color: "#2d3e50", marginBottom: "1rem" }}>Quiz Complete!</h4>
           <ScoreCircle $score={score} $total={questions.length}>
@@ -849,7 +841,7 @@ useEffect(() => {
 
   const q = questions[current];
   return (
-    <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+    <div style={{ width: "100%", margin: "0 auto" }}>
       {timerSeconds > 0 && !showResult && (
         <div style={{
           fontWeight: "bold",
@@ -881,7 +873,7 @@ useEffect(() => {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          <p style={{ fontWeight: "bold", fontSize: "1.1rem", marginBottom: "1.5rem", color: "#2d3e50" }}>
+          <p style={{ fontWeight: "bold", fontSize: "1.3rem", marginBottom: "1.5rem", color: "whitesmoke" }}>
             {q.question_text}
           </p>
           <ul style={{ paddingLeft: 0, margin: "0 0 1.5rem 0", listStyle: "none" }}>
@@ -1039,12 +1031,24 @@ const StudentPage: React.FC = () => {
         .from("quizzes")
         .select("*")
         .eq("course_id", selectedCourse)
+        .eq("is_enabled", true) // <-- This is the new line
         .order("week", { ascending: true });
       if (!error && data) setQuizzes(data);
       setLoading(false);
     };
     fetchQuizzes();
   }, [selectedCourse]);
+
+  useEffect(() => {
+    if (selectedQuiz) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [selectedQuiz]);
   
   // Add keyboard navigation for quiz
   useEffect(() => {

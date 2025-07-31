@@ -10,7 +10,7 @@ import BlogManager from './BlogManager';
 // Define types
 type Course = { id: string; name: string };
 type Note = { id: string; title: string; week: number; file_url: string; course_id: string };
-type Quiz = { id: string; title: string; week: number; course_id: string; num_questions?: number; timer_seconds?: number };
+type Quiz = { id: string; title: string; week: number; course_id: string; num_questions?: number; timer_seconds?: number; is_enabled: boolean };
 type Question = {
   id: string;
   question_text: string;
@@ -476,6 +476,19 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     if (data) setQuizzes(data);
   };
 
+  const handleToggleQuiz = async (id: string, is_enabled: boolean) => {
+    const { error } = await supabase
+      .from("quizzes")
+      .update({ is_enabled: !is_enabled })
+      .eq("id", id);
+
+    if (error) {
+      alert("Failed to update quiz status: " + error.message);
+    } else {
+      fetchQuizzes();
+    }
+  };
+
   // Fetch results for selected quiz
   useEffect(() => {
     if (resultsQuiz) {
@@ -639,6 +652,63 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  const exportCumulativeResults = async (courseId: string) => {
+    // 1. Fetch all quizzes for the course
+    const { data: quizzes, error: quizzesError } = await supabase
+      .from('quizzes')
+      .select('id, title')
+      .eq('course_id', courseId);
+
+    if (quizzesError) {
+      alert('Error fetching quizzes.');
+      return;
+    }
+
+    // 2. Fetch all results for these quizzes
+    const quizIds = quizzes.map(q => q.id);
+    const { data: results, error: resultsError } = await supabase
+      .from('quiz_results')
+      .select('student_id, quiz_id, score')
+      .in('quiz_id', quizIds);
+
+    if (resultsError) {
+      alert('Error fetching results.');
+      return;
+    }
+
+    // 3. Process the data
+    const studentScores: { [key: string]: { [key: string]: number } } = {};
+    results.forEach(r => {
+      if (!studentScores[r.student_id]) {
+        studentScores[r.student_id] = {};
+      }
+      studentScores[r.student_id][r.quiz_id] = r.score;
+    });
+
+    // 4. Generate CSV
+    const headers = ['Student ID', ...quizzes.map(q => q.title), 'Total'];
+    const rows = Object.keys(studentScores).map(studentId => {
+      const row = [studentId];
+      let total = 0;
+      quizzes.forEach(q => {
+        const score = studentScores[studentId][q.id] || 0;
+        row.push(score.toString());
+        total += score;
+      });
+      row.push(total.toString());
+      return row.join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${courseId}_cumulative_results.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <PageContainer>
@@ -939,6 +1009,12 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>
                           <ActionButton 
+                            $color={quiz.is_enabled ? "#ffc107" : "#28a745"}
+                            onClick={() => handleToggleQuiz(quiz.id, quiz.is_enabled)}
+                          >
+                            {quiz.is_enabled ? "Disable" : "Enable"}
+                          </ActionButton>
+                          <ActionButton 
                             $color="#4f8cff"
                             onClick={() => setSelectedQuiz(quiz)}
                           >
@@ -1098,6 +1174,33 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
       {/* Results Tab */}
       {activeTab === 'results' && (
         <div>
+          <Section>
+            <SectionTitle>View Results</SectionTitle>
+            <FormGroup>
+              <FormLabel>Select Course:</FormLabel>
+              <FormSelect
+                value={quizCourseId}
+                onChange={(e) => setQuizCourseId(e.target.value)}
+                required
+              >
+                <option value="">Select course</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </FormSelect>
+            </FormGroup>
+            {quizCourseId && (
+              <ActionButton
+                $color="#17a2b8"
+                onClick={() => exportCumulativeResults(quizCourseId)}
+              >
+                Export Cumulative Results
+              </ActionButton>
+            )}
+          </Section>
+
           {!resultsQuiz ? (
             <Section>
               <SectionTitle>Select Quiz to View Results</SectionTitle>
