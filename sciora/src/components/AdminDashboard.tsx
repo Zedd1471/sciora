@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as quizService from '../services/quizService';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
 import Papa from "papaparse";
@@ -10,7 +11,7 @@ import BlogManager from './BlogManager';
 // Define types
 type Course = { id: string; name: string };
 type Note = { id: string; title: string; week: number; file_url: string; course_id: string };
-type Quiz = { id: string; title: string; week: number; course_id: string; num_questions?: number; timer_seconds?: number; is_enabled: boolean };
+type Quiz = { id: string; title: string; week: number; course_id: string; num_questions?: number; timer_seconds?: number; is_enabled: boolean; valid_from?: string; valid_to?: string; };
 type Question = {
   id: string;
   question_text: string;
@@ -310,6 +311,8 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
   const [quizMsg, setQuizMsg] = useState("");
   const [quizNumQuestions, setQuizNumQuestions] = useState<number>(1);
   const [quizTimerMinutes, setQuizTimerMinutes] = useState<number>(0);
+  const [quizValidFrom, setQuizValidFrom] = useState<string>('');
+  const [quizValidTo, setQuizValidTo] = useState<string>('');
 
   // Question management state
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -467,20 +470,43 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     if (quizCourseId) fetchQuizzes();
   }, [quizCourseId]);
 
-  const fetchQuizzes = async () => {
-    const { data } = await supabase
-      .from("quizzes")
-      .select("*")
-      .eq("course_id", quizCourseId)
-      .order("week", { ascending: true });
-    if (data) setQuizzes(data);
+  const getQuizStatus = (quiz: Quiz): string => {
+    const now = new Date();
+    const validFromDate = quiz.valid_from ? new Date(quiz.valid_from) : null;
+    const validToDate = quiz.valid_to ? new Date(quiz.valid_to) : null;
+
+    if (validFromDate && now < validFromDate) {
+      return `Upcoming (Starts: ${validFromDate.toLocaleDateString()})`;
+    }
+    if (validToDate && now > validToDate) {
+      return `Expired (Ended: ${validToDate.toLocaleDateString()})`;
+    }
+    if (quiz.is_enabled) {
+      return "Active";
+    }
+    return "Disabled";
   };
 
-  const handleToggleQuiz = async (id: string, is_enabled: boolean) => {
-    const { error } = await supabase
-      .from("quizzes")
-      .update({ is_enabled: !is_enabled })
-      .eq("id", id);
+  const fetchQuizzes = async () => {
+    const data = await quizService.fetchQuizzes(quizCourseId);
+    setQuizzes(data);
+  };
+
+  const handleToggleQuiz = async (id: string, is_enabled: boolean, valid_from?: string, valid_to?: string) => {
+    const now = new Date();
+    const validFromDate = valid_from ? new Date(valid_from) : null;
+    const validToDate = valid_to ? new Date(valid_to) : null;
+
+    if (!is_enabled && validFromDate && now < validFromDate) {
+      alert("Cannot enable an upcoming quiz before its start date.");
+      return;
+    }
+    if (!is_enabled && validToDate && now > validToDate) {
+      alert("Cannot enable an expired quiz.");
+      return;
+    }
+
+    const { error } = await quizService.toggleQuizStatus(id, is_enabled);
 
     if (error) {
       alert("Failed to update quiz status: " + error.message);
@@ -510,15 +536,15 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
       setQuizMsg("Select course and enter quiz title.");
       return;
     }
-    const { error } = await supabase.from("quizzes").insert([
-      {
-        course_id: quizCourseId,
-        title: quizTitle,
-        week: quizWeek,
-        num_questions: quizNumQuestions,
-        timer_seconds: quizTimerMinutes * 60,
-      },
-    ]);
+    const { error } = await quizService.addQuiz({
+      course_id: quizCourseId,
+      title: quizTitle,
+      week: quizWeek,
+      num_questions: quizNumQuestions,
+      timer_seconds: quizTimerMinutes * 60,
+      valid_from: quizValidFrom || null,
+      valid_to: quizValidTo || null,
+    });
     if (error) setQuizMsg("Failed: " + error.message);
     else {
       setQuizMsg("Quiz added!");
@@ -526,6 +552,8 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
       setQuizWeek(1);
       setQuizNumQuestions(1);
       setQuizTimerMinutes(0);
+      setQuizValidFrom('');
+      setQuizValidTo('');
       fetchQuizzes();
     }
   };
@@ -533,10 +561,14 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
   // Delete quiz
   const handleDeleteQuiz = async (id: string) => {
     if (!window.confirm("Delete this quiz and all its questions?")) return;
-    await supabase.from("quizzes").delete().eq("id", id);
-    setSelectedQuiz(null);
-    fetchQuizzes();
-    setQuestions([]);
+    const { error } = await quizService.deleteQuiz(id);
+    if (error) {
+      alert("Failed to delete quiz: " + error.message);
+    } else {
+      setSelectedQuiz(null);
+      fetchQuizzes();
+      setQuestions([]);
+    }
   };
 
   // Fetch questions for selected quiz
@@ -545,11 +577,8 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
   }, [selectedQuiz]);
 
   const fetchQuestions = async (quizId: string) => {
-    const { data } = await supabase
-      .from("questions")
-      .select("*")
-      .eq("quiz_id", quizId);
-    if (data) setQuestions(data);
+    const data = await quizService.fetchQuestions(quizId);
+    setQuestions(data);
   };
 
   // Add question manually
@@ -566,14 +595,12 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
       setQuestionMsg("Fill all fields and options.");
       return;
     }
-    const { error } = await supabase.from("questions").insert([
-      {
-        quiz_id: selectedQuiz.id,
-        question_text: questionText,
-        options,
-        correct_option: correctOption,
-      },
-    ]);
+    const { error } = await quizService.addQuestion({
+      quiz_id: selectedQuiz.id,
+      question_text: questionText,
+      options,
+      correct_option: correctOption,
+    });
     if (error) setQuestionMsg("Failed: " + error.message);
     else {
       setQuestionMsg("Question added!");
@@ -586,8 +613,12 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
 
   // Delete question
   const handleDeleteQuestion = async (id: string) => {
-    await supabase.from("questions").delete().eq("id", id);
-    if (selectedQuiz) fetchQuestions(selectedQuiz.id);
+    const { error } = await quizService.deleteQuestion(id);
+    if (error) {
+      alert("Failed to delete question: " + error.message);
+    } else {
+      if (selectedQuiz) fetchQuestions(selectedQuiz.id);
+    }
   };
 
   // CSV upload handler
@@ -985,6 +1016,22 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                       required
                     />
                   </FormGroup>
+                  <FormGroup>
+                    <FormLabel>Valid From:</FormLabel>
+                    <FormInput
+                      type="date"
+                      value={quizValidFrom}
+                      onChange={(e) => setQuizValidFrom(e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <FormLabel>Valid To:</FormLabel>
+                    <FormInput
+                      type="date"
+                      value={quizValidTo}
+                      onChange={(e) => setQuizValidTo(e.target.value)}
+                    />
+                  </FormGroup>
                   <SubmitButton>Add Quiz</SubmitButton>
                   {quizMsg && (
                     <Message $success={quizMsg.includes("add")}>
@@ -1006,11 +1053,14 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                           <div style={{ fontSize: "0.9rem", color: "#666" }}>
                             Week {quiz.week} | {quiz.num_questions || 0} questions
                           </div>
+                          <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "5px" }}>
+                            Status: {getQuizStatus(quiz)}
+                          </div>
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>
                           <ActionButton 
                             $color={quiz.is_enabled ? "#ffc107" : "#28a745"}
-                            onClick={() => handleToggleQuiz(quiz.id, quiz.is_enabled)}
+                            onClick={() => handleToggleQuiz(quiz.id, quiz.is_enabled, quiz.valid_from, quiz.valid_to)}
                           >
                             {quiz.is_enabled ? "Disable" : "Enable"}
                           </ActionButton>

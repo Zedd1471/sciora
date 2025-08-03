@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as quizService from '../services/quizService';
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../services/supabaseClient";
 import styled from "styled-components";
@@ -9,7 +10,7 @@ import KnowledgeFeed from '../components/KnowledgeFeed';
 // Types
 type Course = { id: string; name: string };
 type Note = { id: string; title: string; file_url: string; week: number };
-type Quiz = { id: string; title: string; week: number; num_questions?: number; timer_seconds?: number };
+type Quiz = { id: string; title: string; week: number; num_questions?: number; timer_seconds?: number; is_enabled: boolean; valid_from?: string; valid_to?: string; };
 type Question = { id: string; question_text: string; options: string[]; correct_option: number };
 type QuizResult = { id: string; quiz_id: string; student_id: string; score: number; total: number; taken_at: string };
 
@@ -157,34 +158,80 @@ const NotesPanel: React.FC<{ notes: Note[] }> = ({ notes }) => (
   </div>
 );
 
-const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => void; }> = ({ quizzes, onQuizClick }) => (
-  <div>
-    <SectionHeader>
-      <SectionDivider />
-      <SectionTitle>Quizzes</SectionTitle>
-    </SectionHeader>
-    {quizzes.length === 0 ? (
-      <EmptyState>
-        <EmptyStateIcon>📝</EmptyStateIcon>
-        <p>No quizzes available for this course yet.</p>
-      </EmptyState>
-    ) : (
-      <div>
-        {quizzes.map((quiz) => (
-          <QuizButton key={quiz.id} onClick={() => onQuizClick(quiz)}>
-            <div style={{ fontSize: "1.05rem", marginBottom: 4 }}>
-              📝 {quiz.title} <Badge>Week {quiz.week}</Badge>
-            </div>
-            <div style={{ fontSize: "0.95rem", fontWeight: "normal", display: "flex", flexWrap: "wrap", gap: "12px" }}>
-              <span>📘 {quiz.num_questions || 5} Questions</span>
-              <span>⏱️ {quiz.timer_seconds ? `${Math.floor(quiz.timer_seconds / 60)} min` : "No time limit"}</span>
-            </div>
-          </QuizButton>
-        ))}
-      </div>
-    )}
-  </div>
-);
+const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => void; }> = ({ quizzes, onQuizClick }) => {
+  const calculateDaysRemaining = (validTo: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(validTo);
+    endDate.setHours(0, 0, 0, 0);
+    const diffTime = endDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const [displayQuizzes, setDisplayQuizzes] = useState(quizzes);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Re-filter and update quizzes to reflect countdown changes
+      const now = new Date();
+      const updatedQuizzes = quizzes.filter(quiz => {
+        const validFromDate = quiz.valid_from ? new Date(quiz.valid_from) : null;
+        const validToDate = quiz.valid_to ? new Date(quiz.valid_to) : null;
+        return (
+          quiz.is_enabled &&
+          (!validFromDate || now >= validFromDate) &&
+          (!validToDate || now <= validToDate)
+        );
+      });
+      setDisplayQuizzes(updatedQuizzes);
+    }, 1000 * 60 * 60 * 24); // Update once every 24 hours
+
+    return () => clearInterval(interval);
+  }, [quizzes]);
+
+  return (
+    <div>
+      <SectionHeader>
+        <SectionDivider />
+        <SectionTitle>Quizzes</SectionTitle>
+      </SectionHeader>
+      {displayQuizzes.length === 0 ? (
+        <EmptyState>
+          <EmptyStateIcon>📝</EmptyStateIcon>
+          <p>No quizzes available for this course yet.</p>
+        </EmptyState>
+      ) : (
+        <div>
+          {displayQuizzes.map((quiz) => {
+            const daysRemaining = quiz.valid_to ? calculateDaysRemaining(quiz.valid_to) : null;
+            return (
+              <QuizButton key={quiz.id} onClick={() => onQuizClick(quiz)}>
+                <div style={{ fontSize: "1.05rem", marginBottom: 4 }}>
+                  📝 {quiz.title} <Badge>Week {quiz.week}</Badge>
+                </div>
+                <div style={{ fontSize: "0.95rem", fontWeight: "normal", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                  <span>📘 {quiz.num_questions || 5} Questions</span>
+                  <span>⏱️ {quiz.timer_seconds ? `${Math.floor(quiz.timer_seconds / 60)} min` : "No time limit"}</span>
+                  {quiz.valid_from && quiz.valid_to && (
+                    <span style={{ fontSize: "0.85rem", color: "#f0f0f0" }}>
+                      🗓️ Valid: {new Date(quiz.valid_from).toLocaleDateString()} - {new Date(quiz.valid_to).toLocaleDateString()}
+                      {daysRemaining !== null && daysRemaining >= 0 && (
+                        <span style={{ marginLeft: "5px", fontWeight: "bold" }}>
+                          ({daysRemaining} day{daysRemaining === 1 ? "" : "s"} left)
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              </QuizButton>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SectionHeader = styled.div`
   display: flex;
@@ -408,7 +455,7 @@ const Badge = styled.span`
   font-size: 0.8rem;
   font-weight: 600;
   background: rgba(79, 140, 255, 0.15);
-  color: #4f8cff;
+  color: #fff;
   margin-left: 8px;
 `;
 
@@ -1025,15 +1072,24 @@ const StudentPage: React.FC = () => {
       setQuizzes([]);
       return;
     }
+
+
+// ... (rest of the code)
+
     const fetchQuizzes = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("quizzes")
-        .select("*")
-        .eq("course_id", selectedCourse)
-        .eq("is_enabled", true) // <-- This is the new line
-        .order("week", { ascending: true });
-      if (!error && data) setQuizzes(data);
+      const data = await quizService.fetchQuizzes(selectedCourse);
+      const now = new Date();
+      const filteredQuizzes = data.filter(quiz => {
+        const validFromDate = quiz.valid_from ? new Date(quiz.valid_from) : null;
+        const validToDate = quiz.valid_to ? new Date(quiz.valid_to) : null;
+        return (
+          quiz.is_enabled &&
+          (!validFromDate || now >= validFromDate) &&
+          (!validToDate || now <= validToDate)
+        );
+      });
+      setQuizzes(filteredQuizzes);
       setLoading(false);
     };
     fetchQuizzes();
