@@ -13,6 +13,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ResourcesPage from "./pages/ResourcesPage";
 import AdminResourcesUpload from './pages/AdminResourcesUpload';
 import BlogPage from "./pages/BlogPage";
+import Header from "./components/Header";
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -37,6 +38,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
+      <Header />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/student" element={<StudentPage />} />

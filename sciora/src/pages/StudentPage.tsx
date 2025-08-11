@@ -3,7 +3,7 @@ import * as quizService from '../services/quizService';
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../services/supabaseClient";
 import styled from "styled-components";
-import Header from "../components/Header"; // Adjust path if needed
+
 import FeedbackButton from '../components/FeedbackButton';
 import KnowledgeFeed from '../components/KnowledgeFeed';
 
