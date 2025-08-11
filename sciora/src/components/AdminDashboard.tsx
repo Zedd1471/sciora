@@ -10,8 +10,8 @@ import BlogManager from './BlogManager';
 
 // Define types
 type Course = { id: string; name: string };
-type Note = { id: string; title: string; week: number; file_url: string; course_id: string };
-type Quiz = { id: string; title: string; week: number; course_id: string; num_questions?: number; timer_seconds?: number; is_enabled: boolean; valid_from?: string; valid_to?: string; };
+type Note = { id: string; title: string; file_url: string; course_id: string };
+type Quiz = { id: string; title: string; course_id: string; num_questions?: number; timer_seconds?: number; is_enabled: boolean; valid_from?: string; valid_to?: string; };
 type Question = {
   id: string;
   question_text: string;
@@ -297,7 +297,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
   const [courseId, setCourseId] = useState("");
   const [courseName, setCourseName] = useState("");
   const [title, setTitle] = useState("");
-  const [week, setWeek] = useState<number>(1);
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [courseMessage, setCourseMessage] = useState("");
@@ -306,7 +305,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [quizTitle, setQuizTitle] = useState("");
-  const [quizWeek, setQuizWeek] = useState<number>(1);
   const [quizCourseId, setQuizCourseId] = useState("");
   const [quizMsg, setQuizMsg] = useState("");
   const [quizNumQuestions, setQuizNumQuestions] = useState<number>(1);
@@ -382,7 +380,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
       setMessage("Please fill all fields and select a file.");
       return;
     }
-    const filePath = `${courseId}/${week}_${file.name}`;
+    const filePath = `${courseId}/${file.name}`;
     const { error: uploadError } = await supabase.storage
       .from("lecture-notes")
       .upload(filePath, file, { upsert: true });
@@ -399,7 +397,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
         course_id: courseId,
         title,
         file_url: publicUrlData.publicUrl,
-        week,
       },
     ]);
     if (insertError) {
@@ -409,7 +406,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     setMessage("Note uploaded successfully!");
     setTitle("");
     setFile(null);
-    setWeek(1);
     fetchNotes();
   };
 
@@ -539,7 +535,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     const { error } = await quizService.addQuiz({
       course_id: quizCourseId,
       title: quizTitle,
-      week: quizWeek,
       num_questions: quizNumQuestions,
       timer_seconds: quizTimerMinutes * 60,
       valid_from: quizValidFrom || null,
@@ -549,7 +544,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     else {
       setQuizMsg("Quiz added!");
       setQuizTitle("");
-      setQuizWeek(1);
       setQuizNumQuestions(1);
       setQuizTimerMinutes(0);
       setQuizValidFrom('');
@@ -890,16 +884,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                   />
                 </FormGroup>
                 <FormGroup>
-                  <FormLabel>Week:</FormLabel>
-                  <FormInput
-                    type="number"
-                    value={week}
-                    onChange={(e) => setWeek(Number(e.target.value))}
-                    min={1}
-                    required
-                  />
-                </FormGroup>
-                <FormGroup>
                   <FormLabel>File (PDF/Word):</FormLabel>
                   <FormInput
                     type="file"
@@ -927,7 +911,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                       <div>
                         <strong>{note.title}</strong>
                         <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                          Course: {note.course_id}, Week: {note.week}
+                          Course: {note.course_id}
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "8px" }}>
@@ -987,16 +971,6 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                     />
                   </FormGroup>
                   <FormGroup>
-                    <FormLabel>Week:</FormLabel>
-                    <FormInput
-                      type="number"
-                      value={quizWeek}
-                      onChange={(e) => setQuizWeek(Number(e.target.value))}
-                      min={1}
-                      required
-                    />
-                  </FormGroup>
-                  <FormGroup>
                     <FormLabel>Number of Questions:</FormLabel>
                     <FormInput
                       type="number"
@@ -1051,7 +1025,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                         <div>
                           <strong>{quiz.title}</strong>
                           <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                            Week {quiz.week} | {quiz.num_questions || 0} questions
+                            {quiz.num_questions || 0} questions
                           </div>
                           <div style={{ fontSize: "0.8rem", color: "#888", marginTop: "5px" }}>
                             Status: {getQuizStatus(quiz)}
@@ -1098,7 +1072,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                 alignItems: "center",
                 marginBottom: "1.5rem"
               }}>
-                <h3>Questions for: {selectedQuiz.title} (Week {selectedQuiz.week})</h3>
+                <h3>Questions for: {selectedQuiz.title}</h3>
                 <ActionButton 
                   $color="#6c757d"
                   onClick={() => setSelectedQuiz(null)}
@@ -1264,7 +1238,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                     <div>
                       <strong>{quiz.title}</strong>
                       <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                        Week {quiz.week} | {quiz.num_questions || 0} questions
+                        {quiz.num_questions || 0} questions
                       </div>
                     </div>
                     <ActionButton 
@@ -1285,7 +1259,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                 alignItems: "center",
                 marginBottom: "1.5rem"
               }}>
-                <h3>Results for: {resultsQuiz.title} (Week {resultsQuiz.week})</h3>
+                <h3>Results for: {resultsQuiz.title}</h3>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <ActionButton 
                     $color="#6c757d"
