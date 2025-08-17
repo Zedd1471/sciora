@@ -311,6 +311,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
   const [quizTimerMinutes, setQuizTimerMinutes] = useState<number>(0);
   const [quizValidFrom, setQuizValidFrom] = useState<string>('');
   const [quizValidTo, setQuizValidTo] = useState<string>('');
+  const [enablingQuiz, setEnablingQuiz] = useState<Quiz | null>(null);
 
   // Question management state
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -471,11 +472,15 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     const validFromDate = quiz.valid_from ? new Date(quiz.valid_from) : null;
     const validToDate = quiz.valid_to ? new Date(quiz.valid_to) : null;
 
+    const formatDateTime = (date: Date) => {
+        return date.toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
     if (validFromDate && now < validFromDate) {
-      return `Upcoming (Starts: ${validFromDate.toLocaleDateString()})`;
+      return `Upcoming (Starts: ${formatDateTime(validFromDate)})`;
     }
     if (validToDate && now > validToDate) {
-      return `Expired (Ended: ${validToDate.toLocaleDateString()})`;
+      return `Expired (Ended: ${formatDateTime(validToDate)})`;
     }
     if (quiz.is_enabled) {
       return "Active";
@@ -488,25 +493,38 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
     setQuizzes(data);
   };
 
-  const handleToggleQuiz = async (id: string, is_enabled: boolean, valid_from?: string, valid_to?: string) => {
-    const now = new Date();
-    const validFromDate = valid_from ? new Date(valid_from) : null;
-    const validToDate = valid_to ? new Date(valid_to) : null;
-
-    if (!is_enabled && validFromDate && now < validFromDate) {
-      alert("Cannot enable an upcoming quiz before its start date.");
-      return;
-    }
-    if (!is_enabled && validToDate && now > validToDate) {
-      alert("Cannot enable an expired quiz.");
-      return;
-    }
-
-    const { error } = await quizService.toggleQuizStatus(id, is_enabled);
-
-    if (error) {
-      alert("Failed to update quiz status: " + error.message);
+  const handleToggleQuiz = async (quiz: Quiz) => {
+    if (quiz.is_enabled) {
+      // If it's enabled, just disable it.
+      const { error } = await quizService.toggleQuizStatus(quiz.id, true);
+      if (error) {
+        alert("Failed to update quiz status: " + error.message);
+      } else {
+        fetchQuizzes();
+      }
     } else {
+      // If it's disabled, open the modal to set new properties.
+      setEnablingQuiz(quiz);
+    }
+  };
+  
+  const handleEnableQuizSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!enablingQuiz) return;
+  
+    const { error } = await quizService.updateQuiz(enablingQuiz.id, {
+      is_enabled: true,
+      num_questions: quizNumQuestions,
+      timer_seconds: quizTimerMinutes * 60,
+      valid_from: quizValidFrom || null,
+      valid_to: quizValidTo || null,
+    });
+  
+    if (error) {
+      setQuizMsg("Failed to enable quiz: " + error.message);
+    } else {
+      setQuizMsg("Quiz enabled successfully!");
+      setEnablingQuiz(null);
       fetchQuizzes();
     }
   };
@@ -940,7 +958,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
       {/* Quizzes Tab */}
       {activeTab === 'quizzes' && (
         <div>
-          {!selectedQuiz ? (
+          {!selectedQuiz && !enablingQuiz ? (
             <ResponsiveGrid>
               {/* Add Quiz Form */}
               <Section>
@@ -993,7 +1011,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                   <FormGroup>
                     <FormLabel>Valid From:</FormLabel>
                     <FormInput
-                      type="date"
+                      type="datetime-local"
                       value={quizValidFrom}
                       onChange={(e) => setQuizValidFrom(e.target.value)}
                     />
@@ -1001,7 +1019,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                   <FormGroup>
                     <FormLabel>Valid To:</FormLabel>
                     <FormInput
-                      type="date"
+                      type="datetime-local"
                       value={quizValidTo}
                       onChange={(e) => setQuizValidTo(e.target.value)}
                     />
@@ -1034,7 +1052,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                         <div style={{ display: "flex", gap: "8px" }}>
                           <ActionButton 
                             $color={quiz.is_enabled ? "#ffc107" : "#28a745"}
-                            onClick={() => handleToggleQuiz(quiz.id, quiz.is_enabled, quiz.valid_from, quiz.valid_to)}
+                            onClick={() => handleToggleQuiz(quiz)}
                           >
                             {quiz.is_enabled ? "Disable" : "Enable"}
                           </ActionButton>
@@ -1064,7 +1082,7 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                 )}
               </Section>
             </ResponsiveGrid>
-          ) : (
+          ) : selectedQuiz ? (
             <div>
               <div style={{ 
                 display: "flex", 
@@ -1191,6 +1209,57 @@ const [activeTab, setActiveTab] = useState<'courses' | 'notes' | 'quizzes' | 're
                 </Section>
               </ResponsiveGrid>
             </div>
+          ) : (
+            <Section>
+              <SectionTitle>Enable Quiz: {enablingQuiz?.title}</SectionTitle>
+              <form onSubmit={handleEnableQuizSubmit}>
+                <FormGroup>
+                  <FormLabel>Number of Questions:</FormLabel>
+                  <FormInput
+                    type="number"
+                    value={quizNumQuestions}
+                    onChange={(e) => setQuizNumQuestions(Number(e.target.value))}
+                    min={1}
+                    required
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <FormLabel>Timer (minutes, 0 for no timer):</FormLabel>
+                  <FormInput
+                    type="number"
+                    value={quizTimerMinutes}
+                    onChange={(e) => setQuizTimerMinutes(Number(e.target.value))}
+                    min={0}
+                    required
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <FormLabel>Valid From:</FormLabel>
+                  <FormInput
+                    type="datetime-local"
+                    value={quizValidFrom}
+                    onChange={(e) => setQuizValidFrom(e.target.value)}
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <FormLabel>Valid To:</FormLabel>
+                  <FormInput
+                    type="datetime-local"
+                    value={quizValidTo}
+                    onChange={(e) => setQuizValidTo(e.target.value)}
+                  />
+                </FormGroup>
+                <SubmitButton>Enable Quiz</SubmitButton>
+                <ActionButton type="button" $color="#6c757d" onClick={() => setEnablingQuiz(null)} style={{marginTop: '0.5rem', width: '100%'}}>
+                  Cancel
+                </ActionButton>
+                {quizMsg && (
+                  <Message $success={quizMsg.includes("success")}>
+                    {quizMsg}
+                  </Message>
+                )}
+              </form>
+            </Section>
           )}
         </div>
       )}

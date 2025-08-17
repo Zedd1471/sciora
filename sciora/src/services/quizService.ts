@@ -96,3 +96,13 @@ export const deleteQuestion = async (id: string): Promise<{ error: any }> => {
   const { error } = await supabase.from('questions').delete().eq('id', id);
   return { error };
 };
+
+export const updateQuiz = async (id: string, updates: Partial<Omit<Quiz, 'id' | 'course_id'>>) => {
+  const { data, error } = await supabase
+    .from('quizzes')
+    .update(updates)
+    .eq('id', id)
+    .select();
+
+  return { data, error };
+};

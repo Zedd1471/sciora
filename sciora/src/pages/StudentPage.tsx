@@ -159,14 +159,31 @@ const NotesPanel: React.FC<{ notes: Note[] }> = ({ notes }) => (
 );
 
 const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => void; }> = ({ quizzes, onQuizClick }) => {
-  const calculateDaysRemaining = (validTo: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const calculateTimeRemaining = (validTo: string): string | null => {
+    const now = new Date();
     const endDate = new Date(validTo);
-    endDate.setHours(0, 0, 0, 0);
-    const diffTime = endDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    const diffTime = endDate.getTime() - now.getTime();
+
+    if (diffTime <= 0) {
+        return null;
+    }
+
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+
+    let remainingString = '';
+    if (days > 0) {
+        remainingString += `${days} day${days > 1 ? 's' : ''}`;
+    }
+    if (hours > 0) {
+        remainingString += ` ${hours} hour${hours > 1 ? 's' : ''}`;
+    }
+    if (days === 0 && hours < 1) { // only show minutes if less than an hour left
+          remainingString += ` ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+
+    return remainingString.trim() + ' remaining';
   };
 
   const [displayQuizzes, setDisplayQuizzes] = useState(quizzes);
@@ -185,7 +202,7 @@ const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => voi
         );
       });
       setDisplayQuizzes(updatedQuizzes);
-    }, 1000 * 60 * 60 * 24); // Update once every 24 hours
+    }, 1000 * 60); // Update every minute
 
     return () => clearInterval(interval);
   }, [quizzes]);
@@ -204,7 +221,7 @@ const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => voi
       ) : (
         <div>
           {displayQuizzes.map((quiz) => {
-            const daysRemaining = quiz.valid_to ? calculateDaysRemaining(quiz.valid_to) : null;
+            const timeRemaining = quiz.valid_to ? calculateTimeRemaining(quiz.valid_to) : null;
             return (
               <QuizButton key={quiz.id} onClick={() => onQuizClick(quiz)}>
                 <div style={{ fontSize: "1.05rem", marginBottom: 4 }}>
@@ -215,10 +232,10 @@ const QuizzesPanel: React.FC<{ quizzes: Quiz[]; onQuizClick: (quiz: Quiz) => voi
                   <span>⏱️ {quiz.timer_seconds ? `${Math.floor(quiz.timer_seconds / 60)} min` : "No time limit"}</span>
                   {quiz.valid_from && quiz.valid_to && (
                     <span style={{ fontSize: "0.85rem", color: "#f0f0f0" }}>
-                      🗓️ Valid: {new Date(quiz.valid_from).toLocaleDateString()} - {new Date(quiz.valid_to).toLocaleDateString()}
-                      {daysRemaining !== null && daysRemaining >= 0 && (
+                      🗓️ Valid: {new Date(quiz.valid_from).toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} - {new Date(quiz.valid_to).toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {timeRemaining && (
                         <span style={{ marginLeft: "5px", fontWeight: "bold" }}>
-                          ({daysRemaining} day{daysRemaining === 1 ? "" : "s"} left)
+                          ({timeRemaining})
                         </span>
                       )}
                     </span>
